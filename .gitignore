@@ -1,0 +1,6 @@
+*.csv
+*.xlsx
+*.html
+notion_files/
+activecollab_files/
+env/
