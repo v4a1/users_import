@@ -170,11 +170,48 @@ def render_tver(data, columns_name):
     return items
 
 
+def render_sverkanew(data):
+    day = datetime.now().strftime("%d.%m.%Y")
+    items = [
+        {"email": "Почта", "Manager Email": "Почта руководителя", "Accounts": day}]
+    data_keys = list(data)
+    data_keys.sort()
+    for user in data_keys:
+        item = {}
+        accounts = []
+        if (data.get(user).get("Google") is not None) and (data.get(user).get("Google") != "Suspended"):
+            accounts.append("Google")
+        if (data.get(user).get("Slack") is not None) and (data.get(user).get("Slack") != "Deactivated"):
+            accounts.append("Slack(" + data.get(user).get("Slack") + ")")
+        if data.get(user).get("ActiveCollab") is not None:
+            accounts.append(
+                "ActiveCollab(" + data.get(user).get("ActiveCollab") + ")")
+        if data.get(user).get("Adobe") is not None:
+            accounts.append(data.get(user).get("Adobe"))
+        if data.get(user).get("Office365") is not None:
+            accounts.append(
+                "Microsoft(" + data.get(user).get("Office365") + ")")
+        if data.get(user).get("Miro") is not None:
+            accounts.append("Miro(" + data.get(user).get("Miro") + ")")
+        if data.get(user).get("Notion") is not None:
+            accounts.append("Notion(" + data.get(user).get("Notion") + ")")
+        if data.get(user).get("Boomstream") is not None:
+            accounts.append(
+                "Boomstream(" + data.get(user).get("Boomstream") + ")")
+        if data.get(user).get("Jira") is not None:
+            accounts.append("Jira")
+        item = {"email": user,
+                "Manager Email": data.get(user).get("Manager Email"), "Accounts": " + ".join(accounts)}
+        items.append(item)
+    return items
+
+
 script_name, script_argv = argv
 if script_argv == "sverka":
     google_data = read_csv_file(
         "google.csv", ["Email Address [Required]", "Status [READ ONLY]"], 'utf8', ",")
-    slack_data = read_csv_file("slack-skillboxru-members.csv", ["email", "status"], 'utf8', ",")
+    slack_data = read_csv_file(
+        "slack-skillboxru-members.csv", ["email", "status"], 'utf8', ",")
     activecollab_data = pars_activecollab(read_html_file("activecollab.html"))
     adobe_data = read_csv_file(
         "adobe.csv", ["\ufeffЭлектронная почта", "Продукты группы"], 'utf8', ",")
@@ -215,7 +252,8 @@ if script_argv == "tver":
     google_data = read_csv_file(
         "google.csv", ["Email Address [Required]", "Status [READ ONLY]", "Recovery Email",
                        "Home Secondary Email", "Work Secondary Email"], 'utf8', ",")
-    slack_data = read_csv_file("slack-skillboxru-members.csv", ["email", "status"], 'utf8', ",")
+    slack_data = read_csv_file(
+        "slack-skillboxru-members.csv", ["email", "status"], 'utf8', ",")
     activecollab_data = pars_activecollab(read_html_file("activecollab.html"))
     adobe_data = read_csv_file(
         "adobe.csv", ["\ufeffЭлектронная почта", "Продукты группы"], 'utf8', ",")
@@ -252,3 +290,41 @@ if script_argv == "tver":
     columns_name = ["email", "Work email", "Accounts"]
     all_users = render_tver(data, columns_name)
     save_csv("Тверь.csv", all_users, columns_name)
+
+if script_argv == "sverkanew":
+    google_data = read_csv_file(
+        "google.csv", ["Email Address [Required]", "Status [READ ONLY]", "Manager Email"], 'utf8', ",")
+    slack_data = read_csv_file(
+        "slack-skillboxru-members.csv", ["email", "status"], 'utf8', ",")
+    activecollab_data = pars_activecollab(read_html_file("activecollab.html"))
+    adobe_data = read_csv_file(
+        "adobe.csv", ["\ufeffЭлектронная почта", "Продукты группы"], 'utf8', ",")
+    office365_data = read_csv_file(
+        "office365.csv", ["Имя участника-пользователя", "Лицензии"], 'utf8', ",")
+    miro_data = pars_miro(read_html_file("miro.html"))
+    notion_data = pars_notion(read_html_file("notion.html"))
+    boomstream_data = read_csv_file(
+        "boomstream.csv", ["Email", "Роль"], 'utf8', ",")
+    jira_data = read_csv_file("jira.csv", ["email", "active"], 'utf8', ",")
+    data = {}
+    data = add_data(data, google_data, ["email", "Email Address [Required]"], [[
+                    "Manager Email", "Manager Email"], ["Google", "Status [READ ONLY]"]])
+    data = add_data(data, slack_data, ["email", "email"], [
+        ["Slack", "status"]])
+    data = add_data(data, activecollab_data, ["email", "email"], [
+        ["ActiveCollab", "status"]])
+    data = add_data(data, adobe_data, ["email", "\ufeffЭлектронная почта"], [
+        ["Adobe", "Продукты группы"]])
+    data = add_data(data, office365_data, ["email", "Имя участника-пользователя"], [
+        ["Office365", "Лицензии"]])
+    data = add_data(data, miro_data, ["email", "email"], [
+        ["Miro", "Access level"]])
+    data = add_data(data, notion_data, ["email", "email"], [
+        ["Notion", "Access level"]])
+    data = add_data(data, boomstream_data, ["email", "Email"], [
+        ["Boomstream", "Роль"]])
+    data = add_data(data, jira_data, ["email", "email"], [
+        ["Jira", "active"]])
+    all_users = render_sverkanew(data)
+    columns_name = ["email", "Manager Email", "Accounts"]
+    save_csv("sverkanew.csv", all_users, columns_name)
